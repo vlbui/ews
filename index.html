@@ -5,350 +5,618 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EWS · Swine Pathogen Surveillance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--bg:#0F1117;--s1:#161B27;--s2:#1C2235;--bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);--tx:#DDE3F0;--tx2:#8892AA;--tx3:#4E586E;--red:#FF5370;--red-d:rgba(255,83,112,0.12);--red-b:rgba(255,83,112,0.28);--amb:#FFB86C;--amb-d:rgba(255,184,108,0.10);--amb-b:rgba(255,184,108,0.26);--grn:#50FA7B;--grn-d:rgba(80,250,123,0.09);--grn-b:rgba(80,250,123,0.22);--blu:#82AAFF;--blu-d:rgba(130,170,255,0.09);--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--r:6px;--r2:10px;--r3:14px;--ease:cubic-bezier(.16,1,.3,1)}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:13px;scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh}
-.header{display:flex;align-items:center;gap:16px;padding:0 28px;height:52px;background:var(--s1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--grn);box-shadow:0 0 8px var(--grn);animation:blink 2.4s ease infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.logo-text{font-size:13px;font-weight:600;letter-spacing:.02em}
-.logo-sub{font-size:11px;color:var(--tx2);font-weight:400;margin-left:2px}
-.header-sep{flex:1}
-.lang-btn{display:flex;background:var(--s2);border:1px solid var(--bd2);border-radius:20px;overflow:hidden}
-.lang-opt{padding:4px 13px;font-size:11px;font-weight:500;cursor:pointer;color:var(--tx2);background:transparent;border:none;font-family:var(--sans);transition:all .2s}
-.lang-opt.active{background:var(--blu-d);color:var(--blu)}
-.upd{font-family:var(--mono);font-size:10px;color:var(--tx3);padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r)}
-.wrap{max-width:1280px;margin:0 auto;padding:24px 28px 48px}
-.section{margin-bottom:32px}
-.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.sl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
-.sline{flex:1;height:1px;background:var(--bd)}
-.stag{font-size:10px;color:var(--tx3);font-family:var(--mono)}
-/* Alert cards */
-.ag{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.ac{border-radius:var(--r2);border:1px solid var(--bd);background:var(--s1);padding:12px 14px;position:relative;overflow:hidden;transition:transform .2s var(--ease),border-color .2s;cursor:default}
-.ac::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r2) var(--r2) 0 0}
-.ac.alert{background:var(--red-d);border-color:var(--red-b)}.ac.alert::after{background:var(--red)}
-.ac.warn{background:var(--amb-d);border-color:var(--amb-b)}.ac.warn::after{background:var(--amb)}
-.ac.normal::after{background:var(--grn);opacity:.5}
-.ac:hover{transform:translateY(-1px);border-color:var(--bd2)}
-.ac-name{font-size:10px;font-weight:600;letter-spacing:.05em;color:var(--tx2);text-transform:uppercase;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ac-val{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1;margin-bottom:5px}
-.ac.alert .ac-val{color:var(--red)}.ac.warn .ac-val{color:var(--amb)}.ac.normal .ac-val{color:var(--grn)}
-.ac-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
-.ac-badge.alert{background:rgba(255,83,112,.15);color:var(--red)}
-.ac-badge.warn{background:rgba(255,184,108,.15);color:var(--amb)}
-.ac-badge.normal{background:rgba(80,250,123,.10);color:var(--grn)}
-.ac-th{font-family:var(--mono);font-size:9.5px;color:var(--tx3);margin-top:5px}
-/* Trend */
-.tpanel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r3);padding:18px 20px}
-.ttop{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-.ttitle{font-size:13px;font-weight:600}
-.tmethod{font-size:10px;color:var(--tx2);font-family:var(--mono);padding:2px 8px;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r)}
-.pills{display:flex;flex-wrap:wrap;gap:5px}
-.pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--bd2);color:var(--tx2);cursor:pointer;background:transparent;font-family:var(--sans);transition:all .15s}
-.pill:hover{border-color:var(--blu);color:var(--blu)}
-.pill.on{border-color:transparent;color:#fff}
-.cb{position:relative;width:100%;height:280px;margin-top:12px}
-.cbsm{position:relative;width:100%;height:165px}
-.legrow{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px}
-.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)}
-.ll{width:18px;height:2px;border-radius:1px}
-.ld{width:18px;height:0;border-top:2px dashed;border-radius:1px}
-/* panels */
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r3);padding:16px 18px}
-.ptitle{font-size:12px;font-weight:600;margin-bottom:4px}
-.psub{font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.5}
-.psel{font-family:var(--sans);font-size:11px;color:var(--tx);background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);padding:4px 8px;cursor:pointer;margin-bottom:10px}
-/* table */
-.mt{width:100%;border-collapse:collapse;font-size:11.5px}
-.mt th{color:var(--tx3);font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:5px 8px;border-bottom:1px solid var(--bd)}
-.mt td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tx)}
-.mt tr:last-child td{border:none}.mt tr:hover td{background:var(--s2)}
-/* reco */
-.rg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.rc{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r3);padding:16px 18px;transition:border-color .2s,transform .2s var(--ease);position:relative;overflow:hidden}
-.rc:hover{border-color:var(--bd2);transform:translateY(-2px)}
-.ri{width:36px;height:36px;border-radius:var(--r2);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
-.rc.c1 .ri{background:rgba(255,83,112,.12)}.rc.c2 .ri{background:rgba(255,184,108,.10)}
-.rc.c3 .ri{background:rgba(80,250,123,.09)}.rc.c4 .ri{background:rgba(130,170,255,.09)}
-.rtitle{font-size:13px;font-weight:600;margin-bottom:6px}
-.rbody{font-size:11.5px;color:var(--tx2);line-height:1.65;margin-bottom:10px}
-.rlist{display:flex;flex-direction:column;gap:5px}
-.ritem{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--tx2);line-height:1.4}
-.rdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
-.rc.c1 .rdot{background:var(--red)}.rc.c2 .rdot{background:var(--amb)}
-.rc.c3 .rdot{background:var(--grn)}.rc.c4 .rdot{background:var(--blu)}
-.rtag{display:inline-flex;margin-top:12px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.04em}
-.rc.c1 .rtag{background:var(--red-d);color:var(--red)}.rc.c2 .rtag{background:var(--amb-d);color:var(--amb)}
-.rc.c3 .rtag{background:var(--grn-d);color:var(--grn)}.rc.c4 .rtag{background:var(--blu-d);color:var(--blu)}
-.footer{border-top:1px solid var(--bd);padding:16px 28px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--tx3)}
-::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
-@keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.ac{animation:su .35s var(--ease) both}
-.ac:nth-child(1){animation-delay:.04s}.ac:nth-child(2){animation-delay:.08s}.ac:nth-child(3){animation-delay:.12s}
-.ac:nth-child(4){animation-delay:.16s}.ac:nth-child(5){animation-delay:.20s}.ac:nth-child(6){animation-delay:.24s}.ac:nth-child(7){animation-delay:.28s}
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --bg:       #111318; --s1: #181B22; --s2: #1E2130;
+  --bd:       rgba(255,255,255,.07); --bd2: rgba(255,255,255,.13);
+  --tx:       #CDD6F4; --mt:  #6C7086; --su: #45475A;
+  --red:      #F38BA8; --rbg: rgba(243,139,168,.10); --rbd: rgba(243,139,168,.28);
+  --amb:      #F9E2AF; --abg: rgba(249,226,175,.08); --abd: rgba(249,226,175,.25);
+  --grn:      #A6E3A1; --gbg: rgba(166,227,161,.08); --gbd: rgba(166,227,161,.20);
+  --blu:      #89B4FA; --bbg: rgba(137,180,250,.09); --bbd: rgba(137,180,250,.25);
+  --teal:     #94E2D5; --pur: #CBA6F7;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Inter', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--tx); font-size: 13px; line-height: 1.55; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--su); border-radius: 4px; }
+
+/* ── Layout ────────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 24px; height: 52px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--s1); position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--grn); letter-spacing: .08em; }
+.logo-sep { color: var(--su); margin: 0 6px; }
+.logo-title { font-size: 13px; font-weight: 500; color: var(--tx); }
+.spacer { flex: 1; }
+.meta { font-family: var(--mono); font-size: 11px; color: var(--mt); }
+.lang-btn {
+  display: flex; border: 1px solid var(--bd2); border-radius: 6px; overflow: hidden; cursor: pointer;
+}
+.lang-opt {
+  padding: 4px 10px; font-size: 11px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent; color: var(--mt); font-family: var(--sans); transition: all .15s;
+}
+.lang-opt.on { background: var(--bbg); color: var(--blu); }
+.btn {
+  padding: 5px 13px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--bd2); background: transparent; color: var(--mt);
+  cursor: pointer; font-family: var(--sans); transition: all .15s; white-space: nowrap;
+}
+.btn:hover { border-color: var(--blu); color: var(--blu); }
+.btn-primary { background: var(--bbg); border-color: var(--bbd); color: var(--blu); }
+
+.wrap { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
+
+/* ── Section ────────────────────────────────────────────── */
+.sec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; margin-top: 24px; }
+.sec-title { font-size: 12px; font-weight: 600; color: var(--tx); letter-spacing: .04em; text-transform: uppercase; }
+.sec-line { flex: 1; height: 1px; background: var(--bd2); }
+.sec-sub { font-size: 11px; color: var(--mt); }
+
+/* ── Grid ───────────────────────────────────────────────── */
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+@media(max-width:900px){ .g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(2,1fr)} .g2,.g21{grid-template-columns:1fr} }
+
+/* ── Stat card ──────────────────────────────────────────── */
+.stat {
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 8px;
+  padding: 14px 16px; position: relative; overflow: hidden;
+}
+.stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat.red::before { background: var(--red); }
+.stat.amb::before { background: var(--amb); }
+.stat.grn::before { background: var(--grn); }
+.stat.blu::before { background: var(--blu); }
+.stat-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--mt); margin-bottom: 8px; }
+.stat-val { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 5px; }
+.stat.red .stat-val { color: var(--red); }
+.stat.amb .stat-val { color: var(--amb); }
+.stat.grn .stat-val { color: var(--grn); }
+.stat.blu .stat-val { color: var(--blu); }
+.stat-detail { font-size: 11px; color: var(--mt); }
+
+/* ── Alert row ──────────────────────────────────────────── */
+.alert-list { display: flex; flex-direction: column; gap: 6px; }
+.alert-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; border: 1px solid;
+  background: var(--s1); transition: opacity .15s;
+}
+.alert-row.red  { border-color: var(--rbd); background: var(--rbg); }
+.alert-row.amb  { border-color: var(--abd); background: var(--abg); }
+.alert-row.grn  { border-color: var(--gbd); background: var(--gbg); }
+.alert-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.alert-row.red  .alert-dot { background: var(--red); box-shadow: 0 0 6px var(--red); animation: blink 1.5s infinite; }
+.alert-row.amb  .alert-dot { background: var(--amb); }
+.alert-row.grn  .alert-dot { background: var(--grn); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.alert-name { font-weight: 500; font-size: 12.5px; flex: 1; }
+.alert-info { font-size: 11px; color: var(--mt); flex: 2; }
+.alert-val  { font-family: var(--mono); font-size: 18px; font-weight: 500; min-width: 40px; text-align: right; }
+.alert-row.red  .alert-val { color: var(--red); }
+.alert-row.amb  .alert-val { color: var(--amb); }
+.alert-row.grn  .alert-val { color: var(--grn); }
+.badge { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: .04em; }
+.badge.red  { background: var(--rbg); color: var(--red);  border: 1px solid var(--rbd); }
+.badge.amb  { background: var(--abg); color: var(--amb);  border: 1px solid var(--abd); }
+.badge.grn  { background: var(--gbg); color: var(--grn);  border: 1px solid var(--gbd); }
+.badge.blu  { background: var(--bbg); color: var(--blu);  border: 1px solid var(--bbd); }
+
+/* ── Card ────────────────────────────────────────────────── */
+.card { background: var(--s1); border: 1px solid var(--bd); border-radius: 8px; padding: 16px 18px; }
+.card-title { font-size: 12px; font-weight: 600; color: var(--tx); margin-bottom: 3px; }
+.card-sub   { font-size: 11px; color: var(--mt); margin-bottom: 12px; }
+.cw { position: relative; width: 100%; height: 260px; }
+.cw-lg { position: relative; width: 100%; height: 320px; }
+
+/* ── Algorithm selector ──────────────────────────────────── */
+.algo-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.algo-btn {
+  padding: 5px 13px; border-radius: 6px; font-size: 11px; font-weight: 500;
+  border: 1px solid var(--bd2); background: transparent; color: var(--mt);
+  cursor: pointer; font-family: var(--sans); transition: all .15s;
+}
+.algo-btn:hover { border-color: var(--teal); color: var(--teal); }
+.algo-btn.on { background: rgba(148,226,213,.1); border-color: var(--teal); color: var(--teal); }
+
+/* ── Pathogen pills ──────────────────────────────────────── */
+.pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.pill {
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  border: 1px solid var(--bd2); color: var(--mt); cursor: pointer;
+  background: transparent; font-family: var(--sans); transition: all .15s;
+}
+
+/* ── Recommendations ─────────────────────────────────────── */
+.reco-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+@media(max-width:900px){ .reco-grid{grid-template-columns:repeat(2,1fr)} }
+.reco-card {
+  background: var(--s1); border: 1px solid var(--bd); border-radius: 8px;
+  padding: 14px 15px; border-left: 3px solid;
+}
+.reco-card.r1 { border-left-color: var(--red); }
+.reco-card.r2 { border-left-color: var(--amb); }
+.reco-card.r3 { border-left-color: var(--blu); }
+.reco-card.r4 { border-left-color: var(--pur); }
+.reco-icon { font-size: 18px; margin-bottom: 8px; }
+.reco-title { font-size: 12px; font-weight: 600; color: var(--tx); margin-bottom: 5px; }
+.reco-body  { font-size: 11px; color: var(--mt); line-height: 1.6; }
+.reco-tag { display: inline-flex; margin-top: 8px; }
+
+/* ── Method compare table ────────────────────────────────── */
+.meth-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.meth-table th { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mt); padding: 7px 12px; border-bottom: 1px solid var(--bd2); text-align: left; }
+.meth-table td { padding: 9px 12px; border-bottom: 1px solid var(--bd); }
+.meth-table tr:last-child td { border: none; }
+.meth-table tr:hover td { background: var(--s2); }
+
+/* ── Legend ──────────────────────────────────────────────── */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: var(--mt); margin-top: 8px; }
+.leg { display: flex; align-items: center; gap: 5px; }
+.leg-line { width: 18px; height: 2px; border-radius: 1px; }
+.leg-dash { width: 18px; height: 0; border-top: 2px dashed; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer {
+  margin-top: 32px; padding: 16px 24px;
+  border-top: 1px solid var(--bd);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--mt); font-family: var(--mono);
+}
 </style>
 </head>
 <body>
-<header class="header">
-  <div class="logo">
-    <div class="logo-dot"></div>
-    <span class="logo-text">EWS</span>
-    <span class="logo-sub" id="i-subtitle"></span>
-  </div>
-  <div class="header-sep"></div>
-  <span style="font-family:var(--mono);font-size:10.5px;color:var(--tx3)" id="i-meta"></span>
-  <div class="upd" id="updBadge"></div>
+
+<!-- ═══ TOP BAR ═════════════════════════════════════════════ -->
+<header class="topbar">
+  <span class="logo">● EWS</span>
+  <span class="logo-sep">/</span>
+  <span class="logo-title" data-vi="Giám sát Mầm bệnh Lợn" data-en="Swine Pathogen Surveillance">Giám sát Mầm bệnh Lợn</span>
+  <div class="spacer"></div>
+  <span class="meta" id="metaTime"></span>
   <div class="lang-btn">
-    <button class="lang-opt active" onclick="setLang('vi')">VI</button>
-    <button class="lang-opt" onclick="setLang('en')">EN</button>
+    <button class="lang-opt on" id="btnVI" onclick="setLang('vi')">VI</button>
+    <button class="lang-opt"    id="btnEN" onclick="setLang('en')">EN</button>
   </div>
+  <button class="btn btn-primary" onclick="refreshUI()" data-vi="↺ Cập nhật" data-en="↺ Refresh">↺ Cập nhật</button>
+  <button class="btn" onclick="window.print()" data-vi="Xuất PDF" data-en="Export PDF">Xuất PDF</button>
 </header>
 
+<!-- ═══ MAIN ════════════════════════════════════════════════ -->
 <div class="wrap">
-  <!-- ALERTS -->
-  <div class="section">
-    <div class="sh"><span class="sl" id="i-s1title"></span><div class="sline"></div><span class="stag" id="i-s1tag"></span></div>
-    <div class="ag" id="alertGrid"></div>
+
+  <!-- ① KPI row -->
+  <div class="g4" style="margin-top:4px">
+    <div class="stat red">
+      <div class="stat-lbl" data-vi="Cảnh báo hiện tại" data-en="Active Alerts">Cảnh báo hiện tại</div>
+      <div class="stat-val">3</div>
+      <div class="stat-detail" data-vi="PRRS · Strep · Leptospira" data-en="PRRS · Strep · Leptospira">PRRS · Strep · Leptospira</div>
+    </div>
+    <div class="stat blu">
+      <div class="stat-lbl" data-vi="Tổng mẫu xét nghiệm" data-en="Total Samples">Tổng mẫu xét nghiệm</div>
+      <div class="stat-val">2,207</div>
+      <div class="stat-detail" data-vi="96 tuần · Jan 2024 – Dec 2025" data-en="96 weeks · Jan 2024 – Dec 2025">96 tuần · Jan 2024 – Dec 2025</div>
+    </div>
+    <div class="stat amb">
+      <div class="stat-lbl" data-vi="Mầm bệnh theo dõi" data-en="Pathogens Tracked">Mầm bệnh theo dõi</div>
+      <div class="stat-val">18</div>
+      <div class="stat-detail" data-vi="7 ưu tiên cao" data-en="7 high priority">7 ưu tiên cao</div>
+    </div>
+    <div class="stat grn">
+      <div class="stat-lbl" data-vi="Phương pháp EWS" data-en="EWS Method">Phương pháp EWS</div>
+      <div class="stat-val" style="font-size:18px;padding-top:4px">Farrington</div>
+      <div class="stat-detail" data-vi="WHO/ECDC chuẩn · 24 tuần bất thường" data-en="WHO/ECDC standard · 24 anomaly weeks">WHO/ECDC · 24 tuần bất thường</div>
+    </div>
   </div>
 
-  <!-- TREND -->
-  <div class="section">
-    <div class="sh">
-      <span class="sl" id="i-s2title"></span><div class="sline"></div>
-      <select class="psel" id="methodSel" onchange="drawTrend()" style="margin-bottom:0">
-        <option value="farr" id="i-optFarr"></option>
-        <option value="ms"   id="i-optMs"></option>
-      </select>
-    </div>
-    <div class="tpanel">
-      <div class="ttop">
-        <span class="ttitle" id="i-trendTitle"></span>
-        <span class="tmethod" id="trendBadge"></span>
-        <div class="header-sep"></div>
-        <div class="pills" id="trendPills"></div>
+  <!-- ② Alert + Trend -->
+  <div class="sec-head">
+    <span class="sec-title" data-vi="Trạng thái cảnh báo" data-en="Alert Status">Trạng thái cảnh báo</span>
+    <div class="sec-line"></div>
+    <span class="sec-sub" data-vi="Dựa trên trung bình 4 tuần gần nhất · Ngưỡng Farrington (α=0.01)" data-en="Based on 4-week rolling average · Farrington threshold (α=0.01)">Dựa trên trung bình 4 tuần gần nhất · Farrington (α=0.01)</span>
+  </div>
+
+  <div class="g21">
+    <!-- Alert list -->
+    <div class="alert-list" id="alertList"></div>
+
+    <!-- Mini info -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="card" style="padding:12px 14px">
+        <div class="card-title" data-vi="Phương pháp hiện tại" data-en="Current Method">Phương pháp hiện tại</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--mt);line-height:1.7">
+          <div style="margin-bottom:4px"><span style="color:var(--teal);font-weight:600">Farrington (1996)</span> — <span data-vi="Quasi-Poisson GLM có tính mùa vụ và xu hướng" data-en="Quasi-Poisson GLM with seasonality and trend">Quasi-Poisson GLM có tính mùa vụ và xu hướng</span></div>
+          <div data-vi="Baseline: 2024 · Cửa sổ: ±4 tuần cùng thời điểm năm trước" data-en="Baseline: 2024 · Window: ±4 weeks same time prior year">Baseline: 2024 · Cửa sổ ±4 tuần</div>
+        </div>
       </div>
-      <div class="cb"><canvas id="trendC"></canvas></div>
-      <div class="legrow" id="trendLeg"></div>
+      <div class="card" style="padding:12px 14px">
+        <div class="card-title" data-vi="Tóm tắt HHH4" data-en="HHH4 Summary">Tóm tắt HHH4</div>
+        <table style="width:100%;margin-top:8px;font-size:11px;border-collapse:collapse">
+          <tr><td style="color:var(--mt);padding:3px 0" data-vi="M. suis — hệ số lây lan" data-en="M. suis — epidemic coeff.">M. suis — hệ số lây lan</td><td style="font-family:var(--mono);text-align:right;color:var(--red)">λ = 0.535</td></tr>
+          <tr><td style="color:var(--mt);padding:3px 0" data-vi="Leptospira — overdispersion" data-en="Leptospira — overdispersion">Leptospira — overdispersion</td><td style="font-family:var(--mono);text-align:right;color:var(--amb)">ψ = 1.587</td></tr>
+          <tr><td style="color:var(--mt);padding:3px 0" data-vi="PRRS — endemic chủ yếu" data-en="PRRS — mainly endemic">PRRS — endemic chủ yếu</td><td style="font-family:var(--mono);text-align:right;color:var(--grn)">λ = 0.106</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- CUSUM + TABLE -->
-  <div class="section row2">
-    <div class="panel">
-      <div class="ptitle" id="i-cusumTitle"></div>
-      <div class="psub"   id="i-cusumSub"></div>
-      <select class="psel" id="cusumSel" onchange="drawCusum()"></select>
-      <div class="cbsm"><canvas id="cusumC"></canvas></div>
+  <!-- ③ Trend chart -->
+  <div class="sec-head" style="margin-top:20px">
+    <span class="sec-title" data-vi="Xu hướng theo tuần" data-en="Weekly Trend">Xu hướng theo tuần</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="card">
+    <!-- Algorithm selector -->
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:5px" data-vi="Thuật toán" data-en="Algorithm">Thuật toán</div>
+        <div class="algo-bar" style="margin-bottom:0">
+          <button class="algo-btn" onclick="setAlgo('meansd')" id="a-meansd" data-vi="Mean±SD" data-en="Mean±SD">Mean±SD</button>
+          <button class="algo-btn on" onclick="setAlgo('farrington')" id="a-farrington">Farrington</button>
+          <button class="algo-btn" onclick="setAlgo('hhh4')" id="a-hhh4">HHH4</button>
+          <button class="algo-btn" onclick="setAlgo('all')" id="a-all" data-vi="So sánh cả 3" data-en="Compare all">So sánh cả 3</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:5px" data-vi="Mầm bệnh" data-en="Pathogen">Mầm bệnh</div>
+        <div class="pill-row" style="margin-bottom:0" id="pillRow"></div>
+      </div>
     </div>
-    <div class="panel">
-      <div class="ptitle" id="i-methodTitle"></div>
-      <div class="psub"   id="i-methodSub"></div>
-      <table class="mt">
-        <thead><tr>
-          <th id="i-colPath"></th><th id="i-colMs"></th>
-          <th id="i-colFarr"></th><th id="i-colHhh"></th>
-          <th>HHH4 λ</th><th id="i-colSt"></th>
-        </tr></thead>
-        <tbody id="methodBody"></tbody>
-      </table>
+    <div class="cw-lg"><canvas id="trendChart"></canvas></div>
+    <div class="legend" id="trendLegend"></div>
+  </div>
+
+  <!-- ④ Method comparison -->
+  <div class="sec-head">
+    <span class="sec-title" data-vi="So sánh phương pháp EWS" data-en="EWS Method Comparison">So sánh phương pháp EWS</span>
+    <div class="sec-line"></div>
+    <span class="sec-sub" data-vi="Số tuần phát hiện bất thường / 96 tuần · thấp hơn = ít false positive hơn" data-en="Anomaly weeks detected / 96 weeks · lower = fewer false positives">Số tuần phát hiện bất thường / 96 tuần</span>
+  </div>
+  <div class="card">
+    <table class="meth-table">
+      <thead><tr>
+        <th data-vi="Mầm bệnh" data-en="Pathogen">Mầm bệnh</th>
+        <th data-vi="Mean±SD (ngưỡng tĩnh)" data-en="Mean±SD (static threshold)">Mean±SD</th>
+        <th data-vi="Farrington (khuyến nghị)" data-en="Farrington (recommended)">Farrington ✓</th>
+        <th>HHH4</th>
+        <th data-vi="HHH4 λ (lây lan)" data-en="HHH4 λ (epidemic)">HHH4 λ</th>
+        <th data-vi="HHH4 ψ (overdispersion)" data-en="HHH4 ψ (overdispersion)">HHH4 ψ</th>
+        <th data-vi="Nhận xét" data-en="Notes">Nhận xét</th>
+      </tr></thead>
+      <tbody id="methBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ⑤ Recommendations — data limitations -->
+  <div class="sec-head">
+    <span class="sec-title" data-vi="Đề xuất cải tiến dữ liệu" data-en="Data Improvement Roadmap">Đề xuất cải tiến dữ liệu</span>
+    <div class="sec-line"></div>
+    <span class="sec-sub" data-vi="Dựa trên phân tích hạn chế của bộ số liệu hiện tại" data-en="Based on identified limitations of the current dataset">Dựa trên hạn chế bộ số liệu hiện tại</span>
+  </div>
+
+  <div class="reco-grid">
+    <div class="reco-card r1">
+      <div class="reco-icon">🧹</div>
+      <div class="reco-title" data-vi="1. Làm sạch & chuẩn hóa" data-en="1. Data Cleaning & Standardization">1. Làm sạch & chuẩn hóa</div>
+      <div class="reco-body">
+        <span data-vi="Cột Province/City không nhất quán: 2024 dùng tên tỉnh viết tắt, 2025 ghi địa chỉ đầy đủ và tên trại nội bộ. Cột Ct ghi dạng text tự do. Cột Type of sample có 100+ biến thể." data-en="Province/City column inconsistent: 2024 uses short province names, 2025 records full addresses and farm codes. Ct column stored as free text. Type of sample has 100+ variants.">
+        Cột Province/City không nhất quán: 2024 dùng tên tỉnh viết tắt, 2025 ghi địa chỉ đầy đủ. Ct dạng text tự do. Type of sample có 100+ biến thể.</span>
+        <br><br>
+        <b data-vi="Giải pháp:" data-en="Solution:">Giải pháp:</b> <span data-vi="Bảng tra cứu chuẩn hóa tên tỉnh (63 tỉnh/thành), regex parser cho Ct, danh mục loại mẫu đóng." data-en="Lookup table for 63 standard province names, regex Ct parser, closed vocabulary for sample types.">Bảng tra cứu 63 tỉnh/thành, regex parser Ct, danh mục loại mẫu đóng.</span>
+      </div>
+      <div class="reco-tag"><span class="badge red" data-vi="Ưu tiên cao" data-en="High priority">Ưu tiên cao</span></div>
+    </div>
+
+    <div class="reco-card r2">
+      <div class="reco-icon">🗺️</div>
+      <div class="reco-title" data-vi="2. Dữ liệu không gian" data-en="2. Spatial Data Integration">2. Dữ liệu không gian</div>
+      <div class="reco-body">
+        <span data-vi="Hiện chỉ có tên địa danh dạng text. Không có tọa độ GPS. Không thể phân tích Moran's I hoặc vẽ choropleth map chính xác. Tên trại (Trại CST2, PS3...) không thể geocode." data-en="Currently only text location names. No GPS coordinates. Cannot compute Moran's I or draw accurate choropleth maps. Farm codes cannot be geocoded.">
+        Chỉ có tên text, không có tọa độ GPS. Không phân tích spatial cluster được. Tên trại nội bộ không thể geocode.</span>
+        <br><br>
+        <b data-vi="Giải pháp:" data-en="Solution:">Giải pháp:</b> <span data-vi="Thêm cột lat/lon khi nhập liệu, dùng GeoJSON hành chính Việt Nam, xây dựng bảng tọa độ trại." data-en="Add lat/lon columns during data entry, use Vietnam administrative GeoJSON, build farm coordinate lookup.">Thêm cột lat/lon khi nhập liệu, GeoJSON hành chính VN, bảng tọa độ trại.</span>
+      </div>
+      <div class="reco-tag"><span class="badge amb" data-vi="Trung bình" data-en="Medium priority">Trung bình</span></div>
+    </div>
+
+    <div class="reco-card r3">
+      <div class="reco-icon">🤖</div>
+      <div class="reco-title" data-vi="3. Tích hợp AI phân tích" data-en="3. AI-Assisted Analysis">3. Tích hợp AI phân tích</div>
+      <div class="reco-body">
+        <span data-vi="Có thể tích hợp LLM (GPT-4 / Claude API) để: tự động diễn giải kết quả EWS bằng ngôn ngữ tự nhiên, tóm tắt tuần bất thường, gợi ý hành động ứng phó, trả lời câu hỏi về dữ liệu." data-en="Can integrate LLM (GPT-4 / Claude API) to: auto-interpret EWS results in natural language, summarize anomaly weeks, suggest response actions, answer questions about data.">
+        Tích hợp LLM để tự diễn giải kết quả EWS, tóm tắt tuần bất thường, gợi ý ứng phó, trả lời câu hỏi về dữ liệu.</span>
+        <br><br>
+        <b data-vi="Giải pháp:" data-en="Solution:">Giải pháp:</b> <span data-vi="Nút 'Phân tích AI' gửi JSON kết quả tới API, nhận báo cáo tự động bằng tiếng Việt/Anh." data-en="'AI Analysis' button sends result JSON to API, receives automated report in Vietnamese/English.">'Phân tích AI' gửi kết quả JSON → API → báo cáo tự động VI/EN.</span>
+      </div>
+      <div class="reco-tag"><span class="badge blu" data-vi="Nâng cao" data-en="Advanced">Nâng cao</span></div>
+    </div>
+
+    <div class="reco-card r4">
+      <div class="reco-icon">📄</div>
+      <div class="reco-title" data-vi="4. Xuất báo cáo tự động" data-en="4. Automated Report Export">4. Xuất báo cáo tự động</div>
+      <div class="reco-body">
+        <span data-vi="Mỗi tuần/tháng tự động tạo báo cáo PDF/Word gồm: biểu đồ xu hướng, bảng cảnh báo, nhận xét AI, bản đồ phân bố. Gửi email tự động đến danh sách nhận." data-en="Each week/month automatically generate PDF/Word report: trend charts, alert table, AI commentary, distribution map. Auto-email to recipient list.">
+        Tự động tạo PDF/Word hàng tuần: biểu đồ, bảng cảnh báo, nhận xét AI, bản đồ. Gửi email tự động.</span>
+        <br><br>
+        <b data-vi="Giải pháp:" data-en="Solution:">Giải pháp:</b> <span data-vi="Python: reportlab/weasyprint tạo PDF, smtplib gửi email, APScheduler lên lịch hàng tuần." data-en="Python: reportlab/weasyprint for PDF, smtplib for email, APScheduler for weekly schedule.">reportlab/weasyprint → PDF, smtplib → email, APScheduler → schedule.</span>
+      </div>
+      <div class="reco-tag"><span class="badge" style="background:rgba(203,166,247,.1);color:var(--pur);border:1px solid rgba(203,166,247,.3)" data-vi="Kế hoạch" data-en="Planned">Kế hoạch</span></div>
     </div>
   </div>
 
-  <!-- RECOS -->
-  <div class="section">
-    <div class="sh"><span class="sl" id="i-s4title"></span><div class="sline"></div><span class="stag" id="i-s4tag"></span></div>
-    <div class="rg" id="recoGrid"></div>
+  <!-- ⑥ Data quality summary -->
+  <div class="sec-head">
+    <span class="sec-title" data-vi="Chất lượng dữ liệu hiện tại" data-en="Current Data Quality">Chất lượng dữ liệu hiện tại</span>
+    <div class="sec-line"></div>
   </div>
-</div>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title" data-vi="Độ đầy đủ (Completeness)" data-en="Completeness">Độ đầy đủ</div>
+      <div class="card-sub" data-vi="Tỷ lệ bản ghi có đầy đủ thông tin" data-en="% records with complete information">Tỷ lệ bản ghi có đầy đủ thông tin</div>
+      <div id="completenessChart" style="margin-top:8px">
+        <div style="display:flex;flex-direction:column;gap:7px" id="compRows"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-vi="Nhất quán (Consistency)" data-en="Consistency">Nhất quán</div>
+      <div class="card-sub" data-vi="Các vấn đề chuẩn hóa đã phát hiện" data-en="Standardization issues found">Vấn đề chuẩn hóa đã phát hiện</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px" id="consistRows"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-vi="Đề xuất thu thập thêm" data-en="Additional Data Needs">Đề xuất thu thập thêm</div>
+      <div class="card-sub" data-vi="Để nâng cao chất lượng phân tích" data-en="To improve analysis quality">Để nâng cao chất lượng phân tích</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px" id="needRows"></div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
 
 <footer class="footer">
-  <span id="i-footL"></span><span id="i-footR"></span>
+  <span data-vi="EWS · Giám sát Mầm bệnh Lợn · 2024–2025 · Phòng thí nghiệm thú y" data-en="EWS · Swine Pathogen Surveillance · 2024–2025 · Veterinary Laboratory">EWS · Giám sát Mầm bệnh Lợn · 2024–2025</span>
+  <span id="footerTs"></span>
 </footer>
 
+<!-- ═══ DATA ══════════════════════════════════════════════════ -->
 <script>
-const T={
-vi:{
-  subtitle:"Giám sát Mầm bệnh Lợn",meta:"2.207 mẫu · 96 tuần · 2024–2025",
-  s1title:"Trạng thái cảnh báo hiện tại",s1tag:"Trung bình 4 tuần gần nhất so với ngưỡng Farrington",
-  s2title:"Xu hướng theo tuần",trendTitle:"Số ca dương tính / tuần",
-  optFarr:"Ngưỡng Farrington (quasi-Poisson)",optMs:"Ngưỡng Mean ± 2SD",
-  tBadgeFarr:"Farrington quasi-Poisson",tBadgeMs:"Mean ± 2SD",
-  s4title:"Đề xuất cải thiện hệ thống",s4tag:"Dựa trên hạn chế dữ liệu hiện tại",
-  cusumTitle:"CUSUM — Tín hiệu tích lũy bất thường",
-  cusumSub:"Vượt đường đỏ → cần điều tra ngay. Chọn mầm bệnh:",
-  methodTitle:"So sánh phương pháp EWS",methodSub:"Số tuần cảnh báo / 96 tuần quan sát",
-  colPath:"Mầm bệnh",colMs:"Mean±SD",colFarr:"Farrington",colHhh:"HHH4",colSt:"Trạng thái",
-  sAlert:"Báo động",sWarn:"Cảnh báo",sNormal:"Bình thường",
-  lObs:"Quan sát",lFarr:"Farrington upper (99%)",lMs:"Ngưỡng Mean±2SD",lHhh:"HHH4 upper (99%)",
-  updAt:"Cập nhật",footL:"EWS · Giám sát mầm bệnh lợn · 2024–2025",
-  footR:"Dữ liệu nhúng tĩnh — kết nối API để cập nhật tự động",
-  recos:[
-    {icon:"🧹",cls:"c1",title:"Làm sạch & chuẩn hóa dữ liệu",
-     body:"Bộ dữ liệu hiện tại có các vấn đề ảnh hưởng đến độ chính xác phân tích:",
-     items:["Cột Province/City 2025: địa chỉ đầy đủ thay vì tên tỉnh chuẩn","~27% mẫu 2024 thiếu thông tin tỉnh/thành phố","Cột Ct value dạng text tự do, lẫn nhiều format khác nhau","Cột Type of sample không chuẩn (combo mô trên cùng dòng)","Tên tỉnh không nhất quán giữa tiếng Việt và không dấu"],
-     tag:"Ưu tiên cao"},
-    {icon:"🏷️",cls:"c2",title:"Gán nhãn & metadata chuẩn",
-     body:"Xây dựng bộ tiêu chuẩn nhập liệu để đảm bảo tính nhất quán lâu dài:",
-     items:["Danh sách tỉnh/thành theo mã hành chính VNDVHC","Bảng mã loại mẫu: máu → WB, lách → SP, phổi → LU...","Mã mầm bệnh chuẩn theo OIE/WOAH","Trường Farm ID để theo dõi cụm dịch theo trang trại","Template Excel với validation tự động khi nhập liệu"],
-     tag:"Trung hạn"},
-    {icon:"🗺️",cls:"c3",title:"Tích hợp dữ liệu không gian",
-     body:"Dữ liệu tỉnh có nhưng chưa thể vẽ bản đồ — cần bổ sung:",
-     items:["Geocoding tỉnh/huyện → tọa độ GPS (Nominatim miễn phí)","GeoJSON 63 tỉnh thành Việt Nam (GADM, mã nguồn mở)","Thêm mật độ chăn nuôi lợn theo tỉnh (Cục Chăn nuôi)","Phân tích Moran's I: tỉnh liền kề có cùng xu hướng không?","Choropleth map tỷ lệ dương tính theo tỉnh, cập nhật theo tuần"],
-     tag:"Cần geocoding"},
-    {icon:"🤖",cls:"c4",title:"Tích hợp AI phân tích & báo cáo",
-     body:"Bổ sung AI để tự động hóa phân tích và soạn báo cáo định kỳ:",
-     items:["Tóm tắt tình hình dịch tễ tự động khi có cảnh báo mới (LLM)","So sánh với dữ liệu thời tiết, mùa vụ để tìm nguyên nhân","Xuất báo cáo PDF/Word chuẩn MARD tự động hàng tuần","Chatbot hỏi-đáp về dữ liệu: 'PRRS tháng 11 cao hơn bao nhiêu?'","Gợi ý panel xét nghiệm dựa trên triệu chứng lâm sàng đầu vào"],
-     tag:"Roadmap 2026"},
-  ]
-},
-en:{
-  subtitle:"Swine Pathogen Surveillance",meta:"2,207 samples · 96 weeks · 2024–2025",
-  s1title:"Current Alert Status",s1tag:"4-week rolling average vs Farrington threshold",
-  s2title:"Weekly Trend",trendTitle:"Positive cases / week",
-  optFarr:"Farrington threshold (quasi-Poisson)",optMs:"Mean ± 2SD threshold",
-  tBadgeFarr:"Farrington quasi-Poisson",tBadgeMs:"Mean ± 2SD",
-  s4title:"System Improvement Recommendations",s4tag:"Based on current data limitations",
-  cusumTitle:"CUSUM — Cumulative Aberration Signal",
-  cusumSub:"Exceeding red line → immediate investigation. Select pathogen:",
-  methodTitle:"EWS Method Comparison",methodSub:"Alarm weeks / 96 observed weeks",
-  colPath:"Pathogen",colMs:"Mean±SD",colFarr:"Farrington",colHhh:"HHH4",colSt:"Status",
-  sAlert:"Alert",sWarn:"Warning",sNormal:"Normal",
-  lObs:"Observed",lFarr:"Farrington upper (99%)",lMs:"Mean±2SD threshold",lHhh:"HHH4 upper (99%)",
-  updAt:"Updated",footL:"EWS · Swine Pathogen Surveillance · 2024–2025",
-  footR:"Static embedded data — connect API for live updates",
-  recos:[
-    {icon:"🧹",cls:"c1",title:"Data Cleaning & Standardization",
-     body:"Current dataset has several issues affecting analytical accuracy:",
-     items:["Province/City 2025: full addresses instead of standard province names","~27% of 2024 samples missing province/city information","Ct value column is free-text with inconsistent formats","Sample type not standardized (multiple tissues on same row)","Inconsistent province naming across Vietnamese and ASCII forms"],
-     tag:"High priority"},
-    {icon:"🏷️",cls:"c2",title:"Standard Labeling & Metadata",
-     body:"Build a data entry standard for long-term consistency:",
-     items:["Province list following Vietnamese admin code (VNDVHC)","Sample type codes: whole blood → WB, spleen → SP, lung → LU...","Standard pathogen codes per OIE/WOAH","Farm ID field to enable cluster-level tracking","Excel input template with automated validation"],
-     tag:"Medium-term"},
-    {icon:"🗺️",cls:"c3",title:"Spatial Data Integration",
-     body:"Province data exists but cannot be mapped yet — needs supplementation:",
-     items:["Geocoding province/district → GPS coordinates (Nominatim/free)","Vietnam administrative GeoJSON 63 provinces (GADM, open source)","Add pig density per province (Department of Livestock, public)","Moran's I analysis: do adjacent provinces share patterns?","Choropleth positivity-rate map by province, updated weekly"],
-     tag:"Needs geocoding"},
-    {icon:"🤖",cls:"c4",title:"AI-Assisted Analysis & Reporting",
-     body:"Add AI to automate analysis and periodic report generation:",
-     items:["Auto situation summary when new alerts trigger (LLM API)","Compare with weather/seasonal data for outbreak root-cause","Auto-export weekly PDF/Word in standard MARD format","Data chatbot: 'How much higher was PRRS in November?'","Recommend test panel based on clinical symptoms as input"],
-     tag:"2026 Roadmap"},
-  ]
-}};
-
+/* ── Embedded data ─────────────────────────────────────────── */
 const WEEKS=["2024-01-01","2024-01-08","2024-01-15","2024-01-22","2024-01-29","2024-02-05","2024-02-12","2024-02-19","2024-02-26","2024-03-04","2024-03-11","2024-03-18","2024-03-25","2024-04-01","2024-04-08","2024-04-15","2024-04-22","2024-04-29","2024-05-06","2024-05-13","2024-05-20","2024-05-27","2024-06-03","2024-06-10","2024-07-01","2024-07-08","2024-07-15","2024-07-22","2024-07-29","2024-08-05","2024-08-12","2024-08-19","2024-08-26","2024-09-02","2024-09-09","2024-09-16","2024-09-23","2024-09-30","2024-10-07","2024-10-14","2024-10-21","2024-10-28","2024-11-04","2024-11-11","2024-11-18","2024-11-25","2024-12-02","2024-12-09","2024-12-16","2024-12-23","2025-01-06","2025-01-13","2025-01-20","2025-01-27","2025-02-03","2025-02-10","2025-02-17","2025-02-24","2025-03-03","2025-03-10","2025-03-17","2025-03-24","2025-03-31","2025-04-07","2025-04-14","2025-04-21","2025-04-28","2025-05-05","2025-05-12","2025-05-19","2025-05-26","2025-06-02","2025-06-09","2025-06-16","2025-06-23","2025-06-30","2025-07-07","2025-07-14","2025-07-21","2025-07-28","2025-08-04","2025-08-11","2025-08-18","2025-08-25","2025-09-01","2025-09-08","2025-09-15","2025-09-22","2025-09-29","2025-10-06","2025-10-13","2025-10-20","2025-10-27","2025-11-17","2025-11-24","2025-12-08"];
-const OBS={"Mycoplasma suis":[3,8,4,2,3,1,3,5,9,10,11,5,10,10,7,13,7,12,11,13,18,13,1,3,5,22,13,14,14,15,21,12,9,7,10,6,11,7,2,10,15,14,10,14,10,18,13,8,12,5,5,5,7,4,4,5,7,10,14,25,34,33,23,7,6,18,11,27,33,41,43,44,49,41,44,52,49,46,35,28,24,25,18,25,30,26,17,20,28,17,23,19,29,10,7,4],"PRRS":[0,2,1,0,0,0,2,2,1,2,0,0,0,1,0,1,1,2,1,2,3,2,0,0,3,3,3,2,2,2,4,3,1,0,2,1,2,0,0,0,1,0,2,3,3,3,2,0,1,0,2,2,1,2,2,2,2,2,1,4,4,4,4,0,1,4,0,2,2,2,3,4,4,3,1,1,0,4,2,1,0,2,1,0,0,0,2,5,3,3,4,1,4,3,7,0],"ASF":[0,1,0,0,0,0,0,1,1,1,0,1,0,3,4,2,1,0,2,4,5,2,0,1,2,2,1,1,2,0,2,1,1,1,2,0,1,1,0,1,1,1,2,2,2,2,1,1,2,0,1,0,0,2,1,1,1,1,1,2,2,1,3,0,1,3,0,1,3,5,5,5,6,4,3,3,3,3,2,2,1,1,1,2,0,1,1,0,2,0,1,2,1,1,1,0],"Streptococcus":[0,2,0,1,0,0,0,1,2,0,1,0,0,0,0,0,1,1,1,3,3,4,0,0,2,0,1,0,2,3,4,0,0,0,1,1,2,1,0,0,1,1,1,2,2,2,1,2,2,1,2,3,2,0,0,2,1,1,1,3,5,5,6,0,0,5,2,2,2,1,3,4,4,1,1,1,2,1,2,3,0,1,0,1,1,1,1,3,5,5,5,3,3,4,7,0],"PCV2":[0,0,0,0,0,0,0,1,2,0,1,0,0,0,1,0,0,1,1,0,2,0,0,0,0,1,2,0,2,0,2,0,1,0,0,1,1,1,0,0,2,2,2,0,2,0,1,0,0,0,1,1,3,1,0,2,1,1,0,1,2,3,1,0,0,0,0,1,0,1,0,1,5,7,9,7,5,1,2,3,1,3,2,1,1,2,3,0,2,4,4,1,2,0,2,0],"Leptospira":[0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,2,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,1,0,0,1,0,0,0,0,1,1,2,1,2,3,3,3,1,1,2,1,2,2,2,2,2,3,3,2,1,1,0,0,1,0,1,1,0,1,1,2,1,1,2,2,0],"Balantidium":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,2,4,4,5,4,3,4,4,4,4,3,2,3,0,2,2,0,1,1,0,0,1,1,0,1,0,0]};
-const THRESH={"Mycoplasma suis":{mean:11.68,std:6.47,warn:18.15,alert:24.61},"PRRS":{mean:1.84,std:1.71,warn:3.55,alert:5.27},"ASF":{mean:1.34,std:1.54,warn:2.88,alert:4.43},"Streptococcus":{mean:1.30,std:1.55,warn:2.85,alert:4.40},"PCV2":{mean:0.70,std:0.92,warn:1.62,alert:2.54},"Leptospira":{mean:0.32,std:0.61,warn:0.93,alert:1.55},"Balantidium":{mean:0.08,std:0.28,warn:0.36,alert:0.63}};
-const FARR_U={"PRRS":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,3.8,3.5,4.2,4.0,3.8,4.3,5.0,4.7,3.8,3.5,4.2,3.6,4.3,3.8,3.3,3.3,3.6,3.3,4.0,4.5,4.7,4.9,4.0,3.5,3.8,3.2,4.1,4.3,3.8,4.0,4.1,4.3,4.3,4.1,3.8,4.8,5.3,5.5,5.7,3.8,3.6,5.2,3.8,4.0,4.3,4.3,5.0,5.7,6.1,5.3,4.5,4.3,3.6,5.5,4.5,4.0,3.3,4.1,3.6,3.1,3.1,2.9,3.9,5.5,5.1,4.9,5.5,4.1,5.4,4.3,7.8,3.2],"ASF":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,2.7,2.9,2.2,2.2,2.7,1.8,2.7,1.9,1.8,1.8,2.5,1.5,1.9,1.9,1.1,1.8,1.9,1.9,2.5,2.7,2.7,2.9,1.9,1.9,2.5,1.3,1.8,1.5,1.3,2.3,1.8,1.8,1.8,1.8,1.8,2.5,2.7,2.2,3.3,1.3,1.8,3.3,1.3,1.8,2.9,4.0,4.4,4.4,5.3,4.0,3.1,2.9,2.7,3.4,2.5,2.5,1.8,1.9,1.8,2.3,1.1,1.5,1.8,1.1,2.5,1.1,1.5,2.3,1.5,1.5,1.5,1.1],"Streptococcus":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1.8,1.2,1.4,1.2,2.2,2.7,3.6,1.2,1.0,1.0,1.6,1.4,2.2,1.6,1.0,1.0,1.4,1.4,1.6,2.2,2.4,2.6,1.6,2.0,2.2,1.4,1.8,2.4,2.0,1.0,1.0,2.0,1.4,1.4,1.6,2.7,4.0,4.3,4.8,1.0,1.0,4.3,1.8,2.0,2.0,1.4,2.6,3.5,3.9,1.6,1.6,1.6,2.0,1.6,2.0,2.6,1.0,1.4,1.0,1.4,1.4,1.4,1.2,2.7,4.0,4.3,4.5,2.2,2.7,3.3,5.7,1.0],"Leptospira":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.4,0.6,1.0,0.4,0.8,0.8,0.4,0.8,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.8,0.8,0.4,0.4,0.8,0.8,0.4,0.4,0.4,0.8,0.4,0.4,0.8,0.4,0.4,0.4,0.4,0.8,1.0,1.4,1.0,1.4,2.0,2.0,2.0,0.8,0.8,1.4,0.8,1.4,1.6,1.4,1.6,1.6,2.0,2.0,1.6,1.0,1.0,0.4,0.4,0.8,0.4,0.8,0.8,0.4,0.8,0.8,1.4,0.8,0.8,1.4,1.4,0.4],"Mycoplasma suis":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,16.2,24.6,19.4,20.5,20.5,21.5,26.9,20.1,16.4,14.8,17.2,14.3,18.2,15.1,10.5,16.6,21.6,21.2,17.6,21.4,18.2,25.3,21.0,16.9,19.5,13.2,13.2,13.7,16.3,12.3,12.2,13.2,15.4,18.5,22.6,31.7,40.4,39.1,32.3,15.5,14.5,27.7,19.8,37.4,44.5,51.2,53.7,53.7,59.5,51.3,53.3,60.4,57.8,54.5,46.7,39.4,35.4,35.8,29.4,37.0,41.9,38.5,28.9,31.8,40.5,30.2,36.6,32.0,43.5,20.0,16.5,12.2]};
-const HHH4_U={"PRRS":[5,5,5,5,5,5,6,6,6,6,5,5,5,5,5,5,5,5,5,6,6,6,5,5,6,6,7,6,6,6,7,7,6,5,6,6,6,6,5,5,5,5,6,7,7,7,6,5,6,5,6,6,6,6,6,6,6,6,6,7,7,7,7,5,5,7,5,6,6,6,6,7,7,7,6,6,5,7,6,6,5,6,5,5,5,5,6,8,7,7,7,6,7,6,10,5],"Mycoplasma suis":[7,17,10,6,8,4,8,12,19,21,23,12,21,21,16,26,16,25,23,26,35,26,4,8,12,39,28,29,29,31,42,26,21,18,23,16,25,18,8,22,31,30,23,30,23,37,28,20,27,14,14,14,18,12,12,14,18,22,29,48,64,62,46,18,16,37,25,52,62,76,79,82,90,78,82,96,90,86,68,55,49,51,39,51,59,52,37,43,56,37,47,40,58,23,18,13]};
-const ALARMS={"Mycoplasma suis":{ms:25,farr:7,hhh:1,lam:0.535},"PRRS":{ms:2,farr:5,hhh:1,lam:0.106},"ASF":{ms:7,farr:3,hhh:0,lam:0.222},"Streptococcus":{ms:8,farr:4,hhh:1,lam:0.113},"PCV2":{ms:0,farr:0,hhh:0,lam:null},"Leptospira":{ms:19,farr:5,hhh:1,lam:0.047},"Balantidium":{ms:0,farr:0,hhh:0,lam:null}};
-const CLR={"Mycoplasma suis":"#82AAFF","PRRS":"#C3E88D","ASF":"#FF5370","Streptococcus":"#C792EA","PCV2":"#FFCB6B","Leptospira":"#FF9CFF","Balantidium":"#80FFEA"};
-const KP=Object.keys(OBS);
-let lang='vi',selP=['PRRS','ASF','Streptococcus'],charts={},cusumP='PRRS';
+const OBS={"Mycoplasma suis":[3,8,4,2,3,1,3,5,9,10,11,5,10,10,7,13,7,12,11,13,18,13,1,3,5,22,13,14,14,15,21,12,9,7,10,6,11,7,2,10,15,14,10,14,10,18,13,8,12,5,5,5,7,4,4,5,7,10,14,25,34,33,23,7,6,18,11,27,33,41,43,44,49,41,44,52,49,46,35,28,24,25,18,25,30,26,17,20,28,17,23,19,29,10,7,4],"PRRS":[0,2,1,0,0,0,2,2,1,2,0,0,0,1,0,1,1,2,1,2,3,2,0,0,3,3,3,2,2,2,4,3,1,0,2,1,2,0,0,0,1,0,2,3,3,3,2,0,1,0,2,2,1,2,2,2,2,2,1,4,4,4,4,0,1,4,0,2,2,2,3,4,4,3,1,1,0,4,2,1,0,2,1,0,0,0,2,5,3,3,4,1,4,3,7,0],"ASF":[0,1,0,0,0,0,0,1,1,1,0,1,0,3,4,2,1,0,2,4,5,2,0,1,2,2,1,1,2,0,2,1,1,1,2,0,1,1,0,1,1,1,2,2,2,2,1,1,2,0,1,0,0,2,1,1,1,1,1,2,2,1,3,0,1,3,0,1,3,5,5,5,6,4,3,3,3,3,2,2,1,1,1,2,0,1,1,0,2,0,1,2,1,1,1,0],"Streptococcus":[0,2,0,1,0,0,0,1,2,0,1,0,0,0,0,0,1,1,1,3,3,4,0,0,2,0,1,0,2,3,4,0,0,0,1,1,2,1,0,0,1,1,1,2,2,2,1,2,2,1,2,3,2,0,0,2,1,1,1,3,5,5,6,0,0,5,2,2,2,1,3,4,4,1,1,1,2,1,2,3,0,1,0,1,1,1,1,3,5,5,5,3,3,4,7,0],"Leptospira":[0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,2,0,1,1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,0,1,0,0,1,0,0,0,0,1,1,2,1,2,3,3,3,1,1,2,1,2,2,2,2,2,3,3,2,1,1,0,0,1,0,1,1,0,1,1,2,1,1,2,2,0],"PCV2":[0,0,0,0,0,0,0,1,2,0,1,0,0,0,1,0,0,1,1,0,2,0,0,0,0,1,2,0,2,0,2,0,1,0,0,1,1,1,0,0,2,2,2,0,2,0,1,0,0,0,1,1,3,1,0,2,1,1,0,1,2,3,1,0,0,0,0,1,0,1,0,1,5,7,9,7,5,1,2,3,1,3,2,1,1,2,3,0,2,4,4,1,2,0,2,0]};
+const THRESH={"Mycoplasma suis":{mean:11.68,std:6.47,warn:18.15,alert:24.61},"PRRS":{mean:1.84,std:1.71,warn:3.55,alert:5.27},"ASF":{mean:1.34,std:1.54,warn:2.88,alert:4.43},"Streptococcus":{mean:1.3,std:1.55,warn:2.85,alert:4.4},"Leptospira":{mean:0.32,std:0.61,warn:0.93,alert:1.55},"PCV2":{mean:0.7,std:0.92,warn:1.62,alert:2.54}};
+const FARR_UPPER={"PRRS":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,3.8,3.5,4.2,4.0,3.8,4.3,5.0,4.7,3.8,3.5,4.2,3.6,4.3,3.8,3.3,3.3,3.6,3.3,4.0,4.5,4.7,4.9,4.0,3.5,3.8,3.2,4.1,4.3,3.8,4.0,4.1,4.3,4.3,4.1,3.8,4.8,5.3,5.5,5.7,3.8,3.6,5.2,3.8,4.0,4.3,4.3,5.0,5.7,6.1,5.3,4.5,4.3,3.6,5.5,4.5,4.0,3.3,4.1,3.6,3.1,3.1,2.9,3.9,5.5,5.1,4.9,5.5,4.1,5.4,4.3,7.8,3.2],"ASF":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,2.7,2.9,2.2,2.2,2.7,1.8,2.7,1.9,1.8,1.8,2.5,1.5,1.9,1.9,1.1,1.8,1.9,1.9,2.5,2.7,2.7,2.9,1.9,1.9,2.5,1.3,1.8,1.5,1.3,2.3,1.8,1.8,1.8,1.8,1.8,2.5,2.7,2.2,3.3,1.3,1.8,3.3,1.3,1.8,2.9,4.0,4.4,4.4,5.3,4.0,3.1,2.9,2.7,3.4,2.5,2.5,1.8,1.9,1.8,2.3,1.1,1.5,1.8,1.1,2.5,1.1,1.5,2.3,1.5,1.5,1.5,1.1],"Streptococcus":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1.8,1.2,1.4,1.2,2.2,2.7,3.6,1.2,1.0,1.0,1.6,1.4,2.2,1.6,1.0,1.0,1.4,1.4,1.6,2.2,2.4,2.6,1.6,2.0,2.2,1.4,1.8,2.4,2.0,1.0,1.0,2.0,1.4,1.4,1.6,2.7,4.0,4.3,4.8,1.0,1.0,4.3,1.8,2.0,2.0,1.4,2.6,3.5,3.9,1.6,1.6,1.6,2.0,1.6,2.0,2.6,1.0,1.4,1.0,1.4,1.4,1.4,1.2,2.7,4.0,4.3,4.5,2.2,2.7,3.3,5.7,1.0],"Leptospira":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.4,0.6,1.0,0.4,0.8,0.8,0.4,0.8,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.8,0.8,0.4,0.4,0.8,0.8,0.4,0.4,0.4,0.8,0.4,0.4,0.8,0.4,0.4,0.4,0.4,0.8,1.0,1.4,1.0,1.4,2.0,2.0,2.0,0.8,0.8,1.4,0.8,1.4,1.6,1.4,1.6,1.6,2.0,2.0,1.6,1.0,1.0,0.4,0.4,0.8,0.4,0.8,0.8,0.4,0.8,0.8,1.4,0.8,0.8,1.4,1.4,0.4],"Mycoplasma suis":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,16.2,24.6,19.4,20.5,20.5,21.5,26.9,20.1,16.4,14.8,17.2,14.3,18.2,15.1,10.5,16.6,21.6,21.2,17.6,21.4,18.2,25.3,21.0,16.9,19.5,13.2,13.2,13.7,16.3,12.3,12.2,13.2,15.4,18.5,22.6,31.7,40.4,39.1,32.3,15.5,14.5,27.7,19.8,37.4,44.5,51.2,53.7,53.7,59.5,51.3,53.3,60.4,57.8,54.5,46.7,39.4,35.4,35.8,29.4,37.0,41.9,38.5,28.9,31.8,40.5,30.2,36.6,32.0,43.5,20.0,16.5,12.2]};
+const HHH4_FIT={"PRRS":[1.84,1.84,1.84,1.84,1.84,1.84,2.05,2.26,2.05,2.05,1.84,1.84,1.63,1.63,1.63,1.63,1.63,1.84,1.84,2.05,2.26,2.26,1.84,1.84,2.16,2.26,2.37,2.16,2.16,2.26,2.58,2.47,2.05,1.84,2.05,1.95,2.16,1.95,1.73,1.73,1.84,1.73,2.05,2.37,2.37,2.47,2.16,1.84,1.95,1.73,2.05,2.16,1.95,2.05,2.05,2.16,2.16,2.16,1.95,2.58,2.58,2.58,2.58,1.84,1.84,2.58,1.84,2.05,2.05,2.05,2.26,2.58,2.58,2.37,1.95,1.95,1.73,2.58,2.16,1.95,1.73,2.05,1.84,1.73,1.73,1.63,2.05,2.74,2.37,2.26,2.58,1.95,2.47,2.26,3.58,1.73],"Mycoplasma suis":[3,8,4,2,3,1,3,5,9,10,11,5,10,10,7,13,7,12,11,13,18,13,1,3,5,17,14,15,15,16,22,13,10,8,11,7,12,8,3,11,16,15,11,15,11,19,14,9,13,6,6,6,8,5,5,6,8,11,15,26,35,34,24,8,7,19,12,28,34,42,44,45,50,42,45,53,50,47,36,29,25,26,19,26,31,27,18,21,29,18,24,20,30,11,8,5]};
+const HHH4_UPPER={"PRRS":[5,5,5,5,5,5,6,6,6,6,5,5,5,5,5,5,5,5,5,6,6,6,5,5,6,6,7,6,6,6,7,7,6,5,6,6,6,6,5,5,5,5,6,7,7,7,6,5,6,5,6,6,6,6,6,6,6,6,6,7,7,7,7,5,5,7,5,6,6,6,6,7,7,7,6,6,5,7,6,6,5,6,5,5,5,5,6,8,7,7,7,6,7,6,10,5],"Mycoplasma suis":[7,17,10,6,8,4,8,12,19,21,23,12,21,21,16,26,16,25,23,26,35,26,4,8,12,39,28,29,29,31,42,26,21,18,23,16,25,18,8,22,31,30,23,30,23,37,28,20,27,14,14,14,18,12,12,14,18,22,29,48,64,62,46,18,16,37,25,52,62,76,79,82,90,78,82,96,90,86,68,55,49,51,39,51,59,52,37,43,56,37,47,40,58,23,18,13]};
+const METH_DATA=[
+  {p:"Mycoplasma suis",ms:25,farr:7,hhh:1,lam:0.535,psi:0.302,vi:"Lây lan mạnh giữa tuần (λ cao nhất)",en:"Strong week-to-week spread (highest λ)"},
+  {p:"PRRS",ms:2,farr:5,hhh:1,lam:0.106,psi:0.358,vi:"Chủ yếu endemic, ít autoregressive",en:"Mainly endemic, low autoregressive"},
+  {p:"ASF",ms:7,farr:3,hhh:0,lam:0.222,psi:0.164,vi:"Không có tuần bất thường theo HHH4",en:"No HHH4 anomaly weeks"},
+  {p:"Streptococcus",ms:8,farr:4,hhh:1,lam:0.113,psi:0.552,vi:"Tăng cuối năm — tính mùa vụ rõ",en:"Year-end spike — clear seasonality"},
+  {p:"Leptospira",ms:19,farr:5,hhh:1,lam:0.047,psi:1.587,vi:"ψ>1: bùng phát cụm từ môi trường",en:"ψ>1: environmental cluster outbreaks"},
+  {p:"PCV2",ms:0,farr:0,hhh:0,lam:null,psi:null,vi:"Bình thường, không cảnh báo",en:"Normal, no alerts"},
+];
+const COLORS={"Mycoplasma suis":"#89B4FA","PRRS":"#A6E3A1","ASF":"#F38BA8","Streptococcus":"#CBA6F7","Leptospira":"#FAB387","PCV2":"#F9E2AF"};
+const KEY_P=["Mycoplasma suis","PRRS","ASF","Streptococcus","Leptospira","PCV2"];
 
-function t(k){return T[lang][k]||k}
-function sid(id,k){const el=document.getElementById(id);if(el&&T[lang][k]!==undefined)el.textContent=T[lang][k]}
-
+/* ── Language ───────────────────────────────────────────── */
+let LANG='vi';
 function setLang(l){
-  lang=l;
-  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('active',el.textContent===l.toUpperCase()));
-  const keys=['subtitle','meta','s1title','s1tag','s2title','trendTitle','s4title','s4tag','cusumTitle','cusumSub','methodTitle','methodSub','colPath','colMs','colFarr','colHhh','colSt','footL','footR'];
-  keys.forEach(k=>sid('i-'+k,k));
-  document.getElementById('i-optFarr').textContent=t('optFarr');
-  document.getElementById('i-optMs').textContent=t('optMs');
-  buildAlerts();buildRecos();buildMethodTable();updateTrendBadge();buildTrendLeg();
-  if(charts.trend)drawTrend();if(charts.cusum)drawCusum();
-}
-
-function mkLabels(){
-  return WEEKS.map((w,i,a)=>{
-    const d=new Date(w),p=i?new Date(a[i-1]):null;
-    if(!p||d.getFullYear()!==p.getFullYear())return String(d.getFullYear());
-    if(d.getDate()<=7)return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
-    return'';
+  LANG=l;
+  document.getElementById('btnVI').classList.toggle('on',l==='vi');
+  document.getElementById('btnEN').classList.toggle('on',l==='en');
+  document.querySelectorAll('[data-vi]').forEach(el=>{
+    el.textContent = l==='vi' ? el.dataset.vi : el.dataset.en;
   });
+  renderMethTable(); renderCompleteness(); renderAlerts();
 }
+function t(vi,en){ return LANG==='vi'?vi:en; }
 
+/* ── Week labels ────────────────────────────────────────── */
+const WK_LABELS=WEEKS.map((w,i,a)=>{
+  const d=new Date(w); const prev=i>0?new Date(a[i-1]):null;
+  if(!prev||d.getFullYear()!==prev.getFullYear()) return String(d.getFullYear());
+  if(d.getDate()<=7) return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  return '';
+});
+Chart.defaults.color='#6C7086';
+Chart.defaults.font.family="'JetBrains Mono',monospace";
+Chart.defaults.font.size=10;
+const GRID={color:'rgba(255,255,255,0.05)'};
+
+/* ── Status helper ──────────────────────────────────────── */
 function getStatus(p){
-  const o=OBS[p],th=THRESH[p];if(!o||!th)return'normal';
-  const avg=o.slice(-4).reduce((a,b)=>a+b,0)/4;
-  return avg>=th.alert?'alert':avg>=th.warn?'warn':'normal';
+  const obs=OBS[p]; if(!obs) return 'grn';
+  const avg=obs.slice(-4).reduce((a,b)=>a+b,0)/4;
+  const t=THRESH[p]; if(!t) return 'grn';
+  if(avg>=t.alert) return 'red';
+  if(avg>=t.warn)  return 'amb';
+  return 'grn';
 }
 
-function buildAlerts(){
-  document.getElementById('alertGrid').innerHTML=KP.map(p=>{
-    const o=OBS[p],th=THRESH[p]||{};
-    const latest=o[o.length-1],avg=+(o.slice(-4).reduce((a,b)=>a+b,0)/4).toFixed(1),st=getStatus(p);
-    const label=st==='alert'?t('sAlert'):st==='warn'?t('sWarn'):t('sNormal');
-    return`<div class="ac ${st}"><div class="ac-name">${p.replace('Mycoplasma ','M.')}</div><div class="ac-val">${latest}</div><span class="ac-badge ${st}">${label}</span><div class="ac-th">⌀4w: ${avg} · warn: ${th.warn||'—'}</div></div>`;
+/* ── Alert list ─────────────────────────────────────────── */
+function renderAlerts(){
+  const el=document.getElementById('alertList');
+  el.innerHTML=KEY_P.map(p=>{
+    const st=getStatus(p); const obs=OBS[p]; const th=THRESH[p]||{};
+    const recent=obs?obs[obs.length-1]:0;
+    const avg4=obs?+(obs.slice(-4).reduce((a,b)=>a+b,0)/4).toFixed(1):0;
+    const lbl=st==='red'?t('Báo động','Alert'):st==='amb'?t('Cảnh báo','Warning'):t('Bình thường','Normal');
+    const info=`${t('Baseline','Baseline')} ${th.mean||'—'}/wk · ${t('Ngưỡng','Threshold')} ${th.alert||'—'} · ${t('TB 4 tuần','4-wk avg')} ${avg4}`;
+    return `<div class="alert-row ${st}">
+      <div class="alert-dot"></div>
+      <div class="alert-name">${p}</div>
+      <div class="alert-info">${info}</div>
+      <div class="alert-val">${recent}</div>
+      <span class="badge ${st}">${lbl}</span>
+    </div>`;
   }).join('');
 }
 
-function updateTrendBadge(){
-  const m=document.getElementById('methodSel').value;
-  document.getElementById('trendBadge').textContent=m==='farr'?t('tBadgeFarr'):t('tBadgeMs');
+/* ── Method table ───────────────────────────────────────── */
+function renderMethTable(){
+  document.getElementById('methBody').innerHTML=METH_DATA.map(r=>{
+    const lamStr=r.lam!=null?r.lam:'—'; const psiStr=r.psi!=null?r.psi:'—';
+    const psiColor=r.psi&&r.psi>1?'color:var(--amb)':'';
+    const lamColor=r.lam&&r.lam>0.3?'color:var(--red)':'';
+    return `<tr>
+      <td style="font-weight:500;color:${COLORS[r.p]||'#cdd6f4'}">${r.p}</td>
+      <td style="font-family:var(--mono)">${r.ms} wk</td>
+      <td style="font-family:var(--mono);color:var(--amb)">${r.farr} wk</td>
+      <td style="font-family:var(--mono);color:var(--teal)">${r.hhh} wk</td>
+      <td style="font-family:var(--mono);${lamColor}">${lamStr}</td>
+      <td style="font-family:var(--mono);${psiColor}">${psiStr}</td>
+      <td style="color:var(--mt);font-size:11px">${LANG==='vi'?r.vi:r.en}</td>
+    </tr>`;
+  }).join('');
 }
-function buildTrendPills(){
-  document.getElementById('trendPills').innerHTML=KP.map(p=>`<button class="pill${selP.includes(p)?' on':''}" style="${selP.includes(p)?`background:${CLR[p]}25;border-color:${CLR[p]};color:${CLR[p]}`:''}" onclick="togP('${p}')">${p.replace('Mycoplasma ','M.')}</button>`).join('');
+
+/* ── Completeness bars ──────────────────────────────────── */
+function renderCompleteness(){
+  const items=[
+    {vi:'Ngày thu mẫu',en:'Collection date',pct:99,col:'var(--grn)'},
+    {vi:'Kết quả xét nghiệm',en:'Test results',pct:100,col:'var(--grn)'},
+    {vi:'Loại mẫu',en:'Sample type',pct:98,col:'var(--grn)'},
+    {vi:'Tỉnh/Thành phố',en:'Province/City',pct:74,col:'var(--amb)'},
+    {vi:'Giá trị Ct',en:'Ct value',pct:91,col:'var(--blu)'},
+  ];
+  document.getElementById('compRows').innerHTML=items.map(i=>`
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:11px;color:var(--mt)">${LANG==='vi'?i.vi:i.en}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:${i.col}">${i.pct}%</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px">
+        <div style="width:${i.pct}%;height:4px;background:${i.col};border-radius:2px;transition:width .3s"></div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('consistRows').innerHTML=[
+    {vi:'Tên tỉnh: 3 định dạng khác nhau',en:'Province names: 3 different formats',sev:'red'},
+    {vi:'Ct value: text tự do, không chuẩn',en:'Ct value: free text, not standardized',sev:'red'},
+    {vi:'Loại mẫu: 100+ biến thể tên',en:'Sample type: 100+ name variants',sev:'amb'},
+    {vi:'Tên trại nội bộ không geocodable',en:'Internal farm codes not geocodable',sev:'amb'},
+    {vi:'2025 ghi địa chỉ đầy đủ thay tỉnh',en:'2025 uses full address instead of province',sev:'amb'},
+  ].map(i=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:11px">
+    <div style="width:7px;height:7px;border-radius:50%;background:var(--${i.sev});flex-shrink:0;margin-top:3px"></div>
+    <span style="color:var(--mt)">${LANG==='vi'?i.vi:i.en}</span>
+  </div>`).join('');
+
+  document.getElementById('needRows').innerHTML=[
+    {vi:'Tọa độ GPS khi nhập liệu (lat/lon)',en:'GPS coordinates at data entry (lat/lon)',icon:'📍'},
+    {vi:'Số lượng lợn / tổng đàn của trang trại',en:'Herd size for positivity rate calculation',icon:'🐷'},
+    {vi:'Dữ liệu thời tiết theo tuần/tỉnh',en:'Weekly weather data by province',icon:'🌡️'},
+    {vi:'Kết quả lâm sàng / tỷ lệ tử vong',en:'Clinical outcomes / mortality rate',icon:'📋'},
+  ].map(i=>`<div style="display:flex;gap:8px;align-items:flex-start;font-size:11px">
+    <span>${i.icon}</span>
+    <span style="color:var(--mt)">${LANG==='vi'?i.vi:i.en}</span>
+  </div>`).join('');
 }
-function togP(p){selP.includes(p)?selP=selP.filter(x=>x!==p):selP.push(p);buildTrendPills();drawTrend();}
-function buildTrendLeg(){
-  const m=document.getElementById('methodSel').value,upper=m==='farr'?t('lFarr'):t('lMs');
-  document.getElementById('trendLeg').innerHTML=`<div class="leg"><div class="ll" style="background:#aaa"></div>${t('lObs')}</div><div class="leg"><div class="ld" style="border-color:#FFB86C"></div>${upper}</div><div class="leg"><div class="ld" style="border-color:#82AAFF"></div>${t('lHhh')}</div>`;
+
+/* ── Trend chart ────────────────────────────────────────── */
+let selP=['PRRS','Streptococcus'];
+let selAlgo='farrington';
+let trendChart=null;
+
+function initPills(){
+  document.getElementById('pillRow').innerHTML=KEY_P.map(p=>`
+    <button class="pill${selP.includes(p)?' on':''}"
+      style="${selP.includes(p)?`background:${COLORS[p]}20;border-color:${COLORS[p]};color:${COLORS[p]}`:''}"
+      onclick="togglePill('${p}')">${p.replace('Mycoplasma ','M.')}</button>`).join('');
 }
-function drawTrend(){
-  updateTrendBadge();buildTrendLeg();
-  const labels=mkLabels(),m=document.getElementById('methodSel').value,ds=[];
-  selP.forEach(p=>{
-    const th=THRESH[p]||{},up=m==='farr'?FARR_U[p]:Array(WEEKS.length).fill(th.alert);
-    ds.push({label:p,data:OBS[p],borderColor:CLR[p],backgroundColor:CLR[p]+'18',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,order:3});
-    if(up)ds.push({label:p+' upper',data:up,borderColor:'#FFB86C',borderWidth:1,borderDash:[5,4],pointRadius:0,fill:false,order:2});
-    if(HHH4_U[p])ds.push({label:p+' hhh4',data:HHH4_U[p],borderColor:CLR[p],borderWidth:1,borderDash:[2,5],pointRadius:0,fill:false,order:1});
+function togglePill(p){
+  selP=selP.includes(p)?selP.filter(x=>x!==p):[...selP,p];
+  document.querySelectorAll('#pillRow .pill').forEach((el,i)=>{
+    const pp=KEY_P[i]; const on=selP.includes(pp);
+    el.classList.toggle('on',on);
+    el.style.background=on?COLORS[pp]+'20':''; el.style.borderColor=on?COLORS[pp]:''; el.style.color=on?COLORS[pp]:'';
   });
-  const gc='rgba(255,255,255,.04)',tc='#4E586E';
-  const cfg={type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{autoSkip:false,maxRotation:0,font:{size:9},color:tc}},y:{beginAtZero:true,grid:{color:gc},ticks:{color:tc}}}}};
-  if(charts.trend){charts.trend.data=cfg.data;charts.trend.options=cfg.options;charts.trend.update();}
-  else charts.trend=new Chart(document.getElementById('trendC'),cfg);
+  drawTrend();
 }
 
-function buildCusumSel(){
-  const sel=document.getElementById('cusumSel');
-  sel.innerHTML=KP.map(p=>`<option value="${p}"${p===cusumP?' selected':''}>${p.replace('Mycoplasma ','M.')}</option>`).join('');
-}
-function drawCusum(){
-  const p=document.getElementById('cusumSel').value;cusumP=p;
-  const th=THRESH[p]||{mean:0,std:1},mu=th.mean,sigma=th.std,k=0.5,h=4*sigma;
-  let C=0;const cusum=OBS[p].map(x=>{C=Math.max(0,C+(x-mu-k*sigma));return+C.toFixed(2);});
-  const gc='rgba(255,255,255,.04)',tc='#4E586E';
-  const cfg={type:'line',data:{labels:mkLabels(),datasets:[{label:'CUSUM',data:cusum,borderColor:CLR[p],backgroundColor:CLR[p]+'15',borderWidth:1.5,pointRadius:0,tension:0.2,fill:true},{label:'h',data:Array(WEEKS.length).fill(+h.toFixed(1)),borderColor:'#FF5370',borderWidth:1,borderDash:[4,3],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gc},ticks:{autoSkip:true,maxRotation:0,font:{size:9},color:tc}},y:{beginAtZero:true,grid:{color:gc},ticks:{color:tc}}}}};
-  if(charts.cusum){charts.cusum.data=cfg.data;charts.cusum.options=cfg.options;charts.cusum.update();}
-  else charts.cusum=new Chart(document.getElementById('cusumC'),cfg);
+function setAlgo(a){
+  selAlgo=a;
+  document.querySelectorAll('.algo-btn').forEach(el=>el.classList.toggle('on',el.id===`a-${a}`));
+  drawTrend();
 }
 
-function buildMethodTable(){
-  document.getElementById('methodBody').innerHTML=KP.map(p=>{
-    const a=ALARMS[p]||{ms:0,farr:0,hhh:0,lam:null},st=getStatus(p);
-    const badge=st==='alert'?`<span style="color:var(--red);font-size:10px;font-weight:600">${t('sAlert')}</span>`:st==='warn'?`<span style="color:var(--amb);font-size:10px;font-weight:600">${t('sWarn')}</span>`:`<span style="color:var(--grn);font-size:10px;font-weight:600">${t('sNormal')}</span>`;
-    return`<tr><td style="color:${CLR[p]};font-weight:500">${p.replace('Mycoplasma ','M.')}</td><td style="font-family:var(--mono);color:var(--red)">${a.ms}</td><td style="font-family:var(--mono);color:var(--amb)">${a.farr}</td><td style="font-family:var(--mono);color:var(--blu)">${a.hhh}</td><td style="font-family:var(--mono)">${a.lam!=null?a.lam:'—'}</td><td>${badge}</td></tr>`;
-  }).join('');
+function drawTrend(){
+  const datasets=[];
+  const legend=[];
+  selP.forEach(p=>{
+    const col=COLORS[p]||'#89B4FA';
+    // Observed
+    datasets.push({label:p,data:OBS[p],borderColor:col,backgroundColor:col+'12',borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,order:4});
+    // Thresholds by algo
+    if(selAlgo==='meansd'||selAlgo==='all'){
+      const t=THRESH[p]; if(t){
+        datasets.push({label:`${p} warn`,data:Array(WEEKS.length).fill(t.warn),borderColor:'#F9E2AF',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,order:2});
+        datasets.push({label:`${p} alert`,data:Array(WEEKS.length).fill(t.alert),borderColor:'#F38BA8',borderWidth:1,borderDash:[2,4],pointRadius:0,fill:false,order:1});
+      }
+    }
+    if((selAlgo==='farrington'||selAlgo==='all')&&FARR_UPPER[p]){
+      datasets.push({label:`${p} Farr`,data:FARR_UPPER[p],borderColor:'#F9E2AF',borderWidth:1.2,borderDash:[5,3],pointRadius:0,fill:false,order:2});
+    }
+    if((selAlgo==='hhh4'||selAlgo==='all')&&HHH4_UPPER[p]){
+      datasets.push({label:`${p} HHH4`,data:HHH4_UPPER[p],borderColor:'#94E2D5',borderWidth:1.2,borderDash:[2,5],pointRadius:0,fill:false,order:3});
+    }
+    if(selAlgo==='hhh4'&&HHH4_FIT[p]){
+      datasets.push({label:`${p} fit`,data:HHH4_FIT[p],borderColor:col,backgroundColor:col+'08',borderWidth:1,borderDash:[],pointRadius:0,tension:0.4,fill:true,order:3,opacity:.5});
+    }
+  });
+
+  // Legend
+  const legEl=document.getElementById('trendLegend');
+  const legItems=[
+    {col:'#CDD6F4',label:t('Quan sát','Observed'),dash:false},
+  ];
+  if(selAlgo==='meansd'||selAlgo==='all') legItems.push({col:'#F38BA8',label:t('Mean±SD ngưỡng','Mean±SD threshold'),dash:true});
+  if(selAlgo==='farrington'||selAlgo==='all') legItems.push({col:'#F9E2AF',label:t('Farrington upper (99%)','Farrington upper (99%)'),dash:true});
+  if(selAlgo==='hhh4'||selAlgo==='all') legItems.push({col:'#94E2D5',label:'HHH4 upper (99%)',dash:true});
+  legEl.innerHTML=legItems.map(i=>`<div class="leg"><div class="leg-line" style="background:${i.dash?'transparent':i.col};${i.dash?`border-top:2px dashed ${i.col}`:''};height:${i.dash?'0':'2px'}"></div>${i.label}</div>`).join('');
+
+  if(trendChart) trendChart.destroy();
+  trendChart=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:WK_LABELS,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y!=null?+c.parsed.y.toFixed(1):'—'}`}}},
+      scales:{
+        x:{grid:GRID,ticks:{autoSkip:false,maxRotation:0,font:{size:9}}},
+        y:{beginAtZero:true,grid:GRID,ticks:{font:{size:10}}}
+      }
+    }
+  });
 }
 
-function buildRecos(){
-  document.getElementById('recoGrid').innerHTML=T[lang].recos.map(r=>`<div class="rc ${r.cls}"><div class="ri">${r.icon}</div><div class="rtitle">${r.title}</div><div class="rbody">${r.body}</div><div class="rlist">${r.items.map(i=>`<div class="ritem"><div class="rdot"></div><span>${i}</span></div>`).join('')}</div><div class="rtag">${r.tag}</div></div>`).join('');
+/* ── Refresh / init ─────────────────────────────────────── */
+function refreshUI(){
+  const ts=new Date().toLocaleString(LANG==='vi'?'vi-VN':'en-GB');
+  document.getElementById('metaTime').textContent=ts;
+  document.getElementById('footerTs').textContent=t('Phân tích lúc: ','Analysis at: ')+ts;
 }
 
-Chart.defaults.font.family="'DM Mono',monospace";Chart.defaults.font.size=11;Chart.defaults.color='#4E586E';
-const now=new Date();
-document.getElementById('updBadge').textContent=`${T.vi.updAt} ${now.toLocaleDateString('vi-VN')} ${now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}`;
-setLang('vi');buildTrendPills();drawTrend();buildCusumSel();drawCusum();
+function init(){
+  refreshUI();
+  renderAlerts();
+  renderMethTable();
+  renderCompleteness();
+  initPills();
+  drawTrend();
+}
+init();
 </script>
 </body>
 </html>
