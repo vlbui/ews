@@ -199,10 +199,10 @@ body { font-family: var(--sans); background: var(--bg); color: var(--tx); font-s
 
   <!-- ① KPI row -->
   <div class="g4" style="margin-top:4px">
-    <div class="stat red">
+    <div class="stat red" id="kpiAlertCard">
       <div class="stat-lbl" data-vi="Cảnh báo hiện tại" data-en="Active Alerts">Cảnh báo hiện tại</div>
-      <div class="stat-val">3</div>
-      <div class="stat-detail" data-vi="PRRS · Strep · Leptospira" data-en="PRRS · Strep · Leptospira">PRRS · Strep · Leptospira</div>
+      <div class="stat-val" id="kpiAlertCount">—</div>
+      <div class="stat-detail" id="kpiAlertNames">—</div>
     </div>
     <div class="stat blu">
       <div class="stat-lbl" data-vi="Tổng mẫu xét nghiệm" data-en="Total Samples">Tổng mẫu xét nghiệm</div>
@@ -271,7 +271,9 @@ body { font-family: var(--sans); background: var(--bg); color: var(--tx); font-s
         </div>
       </div>
       <div>
-        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:5px" data-vi="Mầm bệnh" data-en="Pathogen">Mầm bệnh</div>
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);margin-bottom:5px">
+          <span data-vi="Mầm bệnh — chọn 1 để xem" data-en="Pathogen — select one">Mầm bệnh — chọn 1 để xem</span>
+        </div>
         <div class="pill-row" style="margin-bottom:0" id="pillRow"></div>
       </div>
     </div>
@@ -455,20 +457,41 @@ function getStatus(p){
 
 /* ── Alert list ─────────────────────────────────────────── */
 function renderAlerts(){
-  const el=document.getElementById('alertList');
-  el.innerHTML=KEY_P.map(p=>{
+  // ── Tính thực tế từ dữ liệu / Compute from actual data ──────
+  const alertP   = KEY_P.filter(p=>getStatus(p)==='red');
+  const warningP = KEY_P.filter(p=>getStatus(p)==='amb');
+  const n = alertP.length + warningP.length;
+
+  // Cập nhật KPI / Update KPI card
+  const kpiCount = document.getElementById('kpiAlertCount');
+  const kpiNames = document.getElementById('kpiAlertNames');
+  const kpiCard  = document.getElementById('kpiAlertCard');
+  if(kpiCount) kpiCount.textContent = n;
+  if(kpiCard)  kpiCard.className = n > 0 ? 'stat red' : 'stat grn';
+  if(kpiNames){
+    if(n === 0){
+      kpiNames.textContent = t('Không có cảnh báo','No active alerts');
+    } else {
+      const parts = [];
+      if(alertP.length)   parts.push(`▲ ${alertP.map(p=>p.replace('Mycoplasma ','M.')).join(' · ')}`);
+      if(warningP.length) parts.push(`◆ ${warningP.map(p=>p.replace('Mycoplasma ','M.')).join(' · ')}`);
+      kpiNames.textContent = parts.join('  ');
+    }
+  }
+
+  // Badge số / Badge count
+  const badge = document.getElementById('alertCount');
+  if(badge){ badge.textContent = n || ''; badge.style.display = n ? '' : 'none'; }
+
+  // Danh sách chi tiết / Detailed list
+  const el = document.getElementById('alertList'); if(!el) return;
+  el.innerHTML = KEY_P.map(p=>{
     const st=getStatus(p); const obs=OBS[p]; const th=THRESH[p]||{};
-    const recent=obs?obs[obs.length-1]:0;
-    const avg4=obs?+(obs.slice(-4).reduce((a,b)=>a+b,0)/4).toFixed(1):0;
-    const lbl=st==='red'?t('Báo động','Alert'):st==='amb'?t('Cảnh báo','Warning'):t('Bình thường','Normal');
-    const info=`${t('Baseline','Baseline')} ${th.mean||'—'}/wk · ${t('Ngưỡng','Threshold')} ${th.alert||'—'} · ${t('TB 4 tuần','4-wk avg')} ${avg4}`;
-    return `<div class="alert-row ${st}">
-      <div class="alert-dot"></div>
-      <div class="alert-name">${p}</div>
-      <div class="alert-info">${info}</div>
-      <div class="alert-val">${recent}</div>
-      <span class="badge ${st}">${lbl}</span>
-    </div>`;
+    const recent = obs ? obs[obs.length-1] : 0;
+    const avg4   = obs ? +(obs.slice(-4).reduce((a,b)=>a+b,0)/4).toFixed(1) : 0;
+    const lbl    = st==='red' ? t('Báo động','Alert') : st==='amb' ? t('Cảnh báo','Warning') : t('Bình thường','Normal');
+    const info   = `Baseline ${th.mean||'—'}/wk · ${t('Ngưỡng','Threshold')} ${th.alert||'—'} · ${t('TB 4T','4wk avg')} ${avg4}`;
+    return `<div class="alert-row ${st}"><div class="alert-dot"></div><div class="alert-name">${p}</div><div class="alert-info">${info}</div><div class="alert-val">${recent}</div><span class="badge ${st}">${lbl}</span></div>`;
   }).join('');
 }
 
@@ -533,24 +556,27 @@ function renderCompleteness(){
 }
 
 /* ── Trend chart ────────────────────────────────────────── */
-let selP=['PRRS','Streptococcus'];
+let selP='PRRS';
 let selAlgo='farrington';
 let trendChart=null;
 
 function initPills(){
-  document.getElementById('pillRow').innerHTML=KEY_P.map(p=>`
-    <button class="pill${selP.includes(p)?' on':''}"
-      style="${selP.includes(p)?`background:${COLORS[p]}20;border-color:${COLORS[p]};color:${COLORS[p]}`:''}"
-      onclick="togglePill('${p}')">${p.replace('Mycoplasma ','M.')}</button>`).join('');
+  _renderPills();
 }
-function togglePill(p){
-  selP=selP.includes(p)?selP.filter(x=>x!==p):[...selP,p];
-  document.querySelectorAll('#pillRow .pill').forEach((el,i)=>{
-    const pp=KEY_P[i]; const on=selP.includes(pp);
-    el.classList.toggle('on',on);
-    el.style.background=on?COLORS[pp]+'20':''; el.style.borderColor=on?COLORS[pp]:''; el.style.color=on?COLORS[pp]:'';
-  });
+
+function _renderPills(){
+  const el=document.getElementById('pillRow'); if(!el) return;
+  el.innerHTML=KEY_P.map(p=>{
+    const on=p===selP;
+    return `<button class="pill${on?' on':''}" style="${on?`background:${COLORS[p]}25;border-color:${COLORS[p]};color:${COLORS[p]}`:''}" onclick="selectPill('${p}')">${p.replace('Mycoplasma ','M.')}</button>`;
+  }).join('');
+}
+
+function selectPill(p){
+  selP=p;
+  _renderPills();
   drawTrend();
+  drawAlarmTimeline();
 }
 
 function setAlgo(a){
@@ -605,86 +631,59 @@ const TT={callbacks:{
 }};
 
 function drawTrend(){
-  const datasets=[];
-  selP.forEach(p=>{
-    const col=COLORS[p]||'#89B4FA';
-    const obs=OBS[p]; const th=THRESH[p];
+  const p   = selP;                          // single string
+  const col = COLORS[p]||'#89B4FA';
+  const obs = OBS[p];
+  const th  = THRESH[p];
+  const datasets = [];
 
-    /* 1. Đường quan sát */
-    datasets.push({label:p,data:obs,borderColor:col,backgroundColor:col+'10',
-      borderWidth:1.5,pointRadius:0,tension:0.3,fill:false,order:5});
+  /* 1. Đường quan sát */
+  datasets.push({label:p,data:obs,borderColor:col,backgroundColor:col+'15',
+    borderWidth:2,pointRadius:0,tension:0.3,fill:false,order:5});
 
-    /* 2. Đường warning mờ — luôn hiển thị */
-    if(th) datasets.push({label:`${p} warn`,data:Array(WEEKS.length).fill(th.warn),
-      borderColor:'#F9E2AF44',borderWidth:1,borderDash:[3,5],pointRadius:0,fill:false,order:3});
+  /* 2. Warning (μ+σ) — luôn hiển thị mờ */
+  if(th) datasets.push({label:'Warning',data:Array(WEEKS.length).fill(th.warn),
+    borderColor:'#F9E2AF60',borderWidth:1,borderDash:[3,5],pointRadius:0,fill:false,order:2});
 
-    /* 3. Ngưỡng + vùng tô theo thuật toán đang chọn */
-    if(selAlgo==='meansd'||selAlgo==='all'){
-      if(th){
-        /* vùng vàng giữa warn↔alert */
-        datasets.push({label:`${p} zone-w`,data:Array(WEEKS.length).fill(th.warn),
-          borderColor:'transparent',backgroundColor:'rgba(249,226,175,0.07)',
-          borderWidth:0,pointRadius:0,fill:'+1',order:4});
-        /* vùng đỏ trên alert */
-        datasets.push({label:`${p} zone-a`,data:Array(WEEKS.length).fill(th.alert),
-          borderColor:'#F38BA8BB',borderWidth:1.5,borderDash:[4,3],
-          backgroundColor:'rgba(243,139,168,0.08)',pointRadius:0,fill:false,order:3});
-      }
-    }
-    if(selAlgo==='farrington'||selAlgo==='all'){
-      const fu=FARR_UPPER[p];
-      if(fu) datasets.push({label:`${p} Farr`,data:fu,
-        borderColor:'#F9E2AF',borderWidth:1.5,borderDash:[6,3],
-        backgroundColor:'rgba(249,226,175,0.06)',pointRadius:0,fill:false,order:3});
-    }
-    if(selAlgo==='hhh4'||selAlgo==='all'){
-      const hu=HHH4_UPPER[p];
-      if(hu) datasets.push({label:`${p} HHH4`,data:hu,
-        borderColor:'#94E2D5',borderWidth:1.5,borderDash:[3,4],
-        backgroundColor:'rgba(148,226,213,0.06)',pointRadius:0,fill:false,order:3});
-    }
-    if(selAlgo==='hhh4'&&HHH4_FIT[p])
-      datasets.push({label:`${p} fit`,data:HHH4_FIT[p],
-        borderColor:col+'77',borderWidth:1,pointRadius:0,tension:0.4,fill:false,order:4});
+  /* 3. Alert theo thuật toán */
+  if((selAlgo==='meansd'||selAlgo==='all')&&th)
+    datasets.push({label:'Mean±SD Alert',data:Array(WEEKS.length).fill(th.alert),
+      borderColor:'#F38BA8CC',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false,order:2});
+  if((selAlgo==='farrington'||selAlgo==='all')&&FARR_UPPER[p])
+    datasets.push({label:'Farrington upper',data:FARR_UPPER[p],
+      borderColor:'#F9E2AF',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:2});
+  if((selAlgo==='hhh4'||selAlgo==='all')&&HHH4_UPPER[p])
+    datasets.push({label:'HHH4 upper',data:HHH4_UPPER[p],
+      borderColor:'#94E2D5',borderWidth:1.5,borderDash:[3,4],pointRadius:0,fill:false,order:2});
+  if(selAlgo==='hhh4'&&HHH4_FIT[p])
+    datasets.push({label:'HHH4 fitted',data:HHH4_FIT[p],
+      borderColor:col+'66',borderWidth:1,pointRadius:0,tension:0.4,fill:false,order:3});
 
-    /* 4. Điểm đánh dấu tuần cảnh báo ▲ */
-    alarmDatasets(p, getAlarmMask(p, selAlgo), obs).forEach(ds=>datasets.push(ds));
-  });
+  /* 4. Điểm ▲ cảnh báo */
+  alarmDatasets(p, getAlarmMask(p, selAlgo), obs).forEach(ds=>datasets.push(ds));
 
   /* Legend */
-  const legEl=document.getElementById('trendLegend');
-  const items=[{col:'#8B8B8B',label:t('Quan sát','Observed'),dash:false}];
-  if(selAlgo==='meansd'||selAlgo==='all')
-    items.push({col:'#F9E2AF',label:t('Warning (μ+σ)','Warning (μ+σ)'),dash:true},
-               {col:'#F38BA8',label:t('Alert (μ+2σ)','Alert (μ+2σ)'),dash:true});
-  if(selAlgo==='farrington'||selAlgo==='all')
-    items.push({col:'#F9E2AF',label:'Farrington upper (99%)',dash:true});
-  if(selAlgo==='hhh4'||selAlgo==='all')
-    items.push({col:'#94E2D5',label:'HHH4 upper (99%)',dash:true});
-  items.push(
-    {col:'#F38BA8',label:t('▲ Tuần báo động','▲ Alert week'),tri:true},
-    {col:'#F9E2AF',label:t('▲ Tuần cảnh báo','▲ Warning week'),tri:true}
-  );
-  legEl.innerHTML=items.map(i=>{
-    const mark=i.tri
-      ?`<span style="color:${i.col};font-size:11px;line-height:1">▲</span>`
+  const items=[{col,label:p,dash:false}];
+  if(th) items.push({col:'#F9E2AF',label:t('Warning (μ+σ)','Warning (μ+σ)'),dash:true});
+  if(selAlgo==='meansd'||selAlgo==='all') items.push({col:'#F38BA8',label:'Mean±SD alert',dash:true});
+  if(selAlgo==='farrington'||selAlgo==='all') items.push({col:'#F9E2AF',label:'Farrington upper',dash:true});
+  if(selAlgo==='hhh4'||selAlgo==='all') items.push({col:'#94E2D5',label:'HHH4 upper',dash:true});
+  items.push({col:'#F38BA8',label:t('▲ Báo động','▲ Alert'),tri:true},{col:'#F9E2AF',label:t('▲ Cảnh báo','▲ Warning'),tri:true});
+
+  document.getElementById('trendLegend').innerHTML=items.map(i=>{
+    const mark=i.tri?`<span style="color:${i.col};font-size:11px">▲</span>`
       :`<div style="width:16px;height:${i.dash?'0':'2px'};${i.dash?`border-top:2px dashed ${i.col}`:`background:${i.col}`};border-radius:1px"></div>`;
     return `<div class="leg">${mark}<span>${i.label}</span></div>`;
   }).join('');
 
   if(trendChart) trendChart.destroy();
   trendChart=new Chart(document.getElementById('trendChart'),{
-    type:'line',
-    data:{labels:WK_LABELS,datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
+    type:'line',data:{labels:WK_LABELS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:TT},
-      scales:{
-        x:{grid:GRID,ticks:{autoSkip:false,maxRotation:0,font:{size:9}}},
-        y:{beginAtZero:true,grid:GRID,ticks:{font:{size:10}}}
-      }
-    }
+      scales:{x:{grid:GRID,ticks:{autoSkip:false,maxRotation:0,font:{size:9}}},
+              y:{beginAtZero:true,grid:GRID,ticks:{font:{size:10}}}}}
   });
 }
 
